@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,20 +22,34 @@ jobs:
         ruby-version: '3.0'
         bundler-cache: true
 
+    - name: Create Gemfile
+      run: |
+        echo "source 'https://rubygems.org'" > Gemfile
+        echo "gem 'jekyll'" >> Gemfile
+        echo "gem 'minima'" >> Gemfile
+        echo "gem 'jekyll-feed'" >> Gemfile
+        echo "gem 'jekyll-seo-tag'" >> Gemfile
+
     - name: Install dependencies
       run: bundle install
 
-    - name: Build site
+    - name: Create js directory
+      run: mkdir -p assets/js
+
+    - name: Create Gitalk config
       env:
         GITALK_CLIENT_ID: ${{ secrets.GITALK_CLIENT_ID }}
         GITALK_CLIENT_SECRET: ${{ secrets.GITALK_CLIENT_SECRET }}
       run: |
         echo "var GITALK_CLIENT_ID='$GITALK_CLIENT_ID';" > assets/js/gitalk-config.js
         echo "var GITALK_CLIENT_SECRET='$GITALK_CLIENT_SECRET';" >> assets/js/gitalk-config.js
-        bundle exec jekyll build
+
+    - name: Build site
+      run: bundle exec jekyll build
 
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./_site
+        force_orphan: true
