@@ -76,8 +76,6 @@ layout: default
   </div>
 </div>
 
-<!-- 添加动画库 -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <!-- 添加自定义样式 -->
 <style>
   .home-container {
@@ -85,20 +83,19 @@ layout: default
     margin: 0 auto;
     padding: 2rem;
     display: flex;
-    justify-content: space-between;
+    gap: 2rem;
   }
 
   .sidebar {
-    width: 250px;
-    padding: 2rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    width: 300px;
+    flex-shrink: 0;
   }
 
   .profile-card {
-    text-align: center;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
   }
 
@@ -106,7 +103,7 @@ layout: default
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    margin: 0 auto;
+    margin: 0 auto 1rem;
     overflow: hidden;
   }
 
@@ -120,146 +117,213 @@ layout: default
     font-size: 1.5rem;
     font-weight: bold;
     margin-bottom: 0.5rem;
+    color: #1d2129;
   }
 
   .bio {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #666;
+    margin-bottom: 1rem;
   }
 
   .stats {
     display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
+    justify-content: space-around;
+    padding: 1rem 0;
+    border-top: 1px solid #eee;
   }
 
   .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    text-align: center;
   }
 
   .count {
+    display: block;
     font-size: 1.5rem;
     font-weight: bold;
+    color: #1e80ff;
   }
 
   .label {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #666;
   }
 
   .category-list {
-    margin-top: 2rem;
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+
+  .category-list h3 {
+    font-size: 1.2rem;
+    color: #1d2129;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
   }
 
   .category-item {
-    display: block;
-    padding: 0.5rem;
-    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    color: #666;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s ease;
   }
 
   .category-item:hover {
-    background-color: #f9f9f9;
+    background: #f4f5f5;
+    color: #1e80ff;
+  }
+
+  .category-item .count {
+    font-size: 0.9rem;
+    background: #f4f5f5;
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    color: #666;
   }
 
   .main-content {
     flex: 1;
-    padding: 2rem;
+    min-width: 0; /* 防止flex子项溢出 */
   }
 
   .article-list {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   .article-card {
-    width: calc(33.33% - 20px);
-    margin: 10px;
+    background: #fff;
     padding: 2rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
+
+  .article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
   }
 
   .article-meta {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #666;
   }
 
   .categories {
     display: flex;
-    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .category-tag {
-    margin-right: 0.5rem;
-    padding: 0.2rem 0.5rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 10px;
+    padding: 0.2rem 0.6rem;
+    background: #f4f5f5;
+    border-radius: 4px;
+    color: #1e80ff;
+    font-size: 0.8rem;
   }
 
   .article-title {
+    margin: 1rem 0;
+  }
+
+  .article-title a {
     font-size: 1.5rem;
+    color: #1d2129;
+    text-decoration: none;
     font-weight: bold;
-    margin-bottom: 0.5rem;
+    line-height: 1.4;
+    transition: color 0.3s ease;
+  }
+
+  .article-title a:hover {
+    color: #1e80ff;
   }
 
   .article-excerpt {
-    font-size: 1rem;
     color: #666;
-    margin-bottom: 1rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 1rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .article-footer {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
   }
 
   .tags {
     display: flex;
-    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .tag {
-    margin-right: 0.5rem;
-    padding: 0.2rem 0.5rem;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 10px;
+    padding: 0.2rem 0.6rem;
+    background: #f4f5f5;
+    border-radius: 4px;
+    color: #666;
+    font-size: 0.8rem;
   }
 
   .read-more {
     display: flex;
     align-items: center;
-    font-size: 1rem;
-    color: #666;
+    gap: 0.3rem;
+    color: #1e80ff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
   }
 
-  .read-more svg {
-    margin-left: 0.5rem;
+  .read-more:hover {
+    gap: 0.5rem;
+  }
+
+  /* 响应式设计 */
+  @media (max-width: 1024px) {
+    .home-container {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 100%;
+    }
+
+    .article-card {
+      margin: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .home-container {
+      padding: 1rem;
+    }
+
+    .article-card {
+      padding: 1.5rem;
+    }
+
+    .article-title a {
+      font-size: 1.3rem;
+    }
   }
 </style>
-
-<!-- 添加平滑滚动效果 -->
-<script>
-document.addEventListener('DOMContentLoaded', (event) => {
-  // 添加滚动时的动画效果
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('animate__fadeInUp');
-        observer.unobserve(entry.target);
-      }
-    });
-  });
-
-  document.querySelectorAll('.article-card').forEach((item) => {
-    observer.observe(item);
-  });
-});
-</script>
