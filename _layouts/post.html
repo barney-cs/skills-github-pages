@@ -1,0 +1,262 @@
+---
+layout: default
+---
+<article class="post animate__animated animate__fadeIn">
+  <div class="post-header">
+    <div class="post-meta">
+      <time datetime="{{ page.date | date_to_xmlschema }}" class="post-date animate__animated animate__slideInRight">
+        {{ page.date | date: "%Y年%m月%d日" }}
+      </time>
+      {% if page.categories.size > 0 %}
+      <div class="post-categories animate__animated animate__slideInLeft">
+        {% for category in page.categories %}
+        <span class="category-tag">{{ category }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <h1 class="post-title animate__animated animate__slideInDown">{{ page.title }}</h1>
+  </div>
+
+  <div class="post-content animate__animated animate__fadeIn">
+    {{ content }}
+  </div>
+
+  <div class="post-footer animate__animated animate__fadeInUp">
+    <div class="post-navigation">
+      {% if page.previous.url %}
+      <a class="prev-post" href="{{page.previous.url}}">&larr; {{ page.previous.title }}</a>
+      {% endif %}
+      {% if page.next.url %}
+      <a class="next-post" href="{{page.next.url}}">{{ page.next.title }} &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+</article>
+
+<!-- 添加动画库 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+<style>
+  .post {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: white;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    border-radius: 10px;
+  }
+
+  .post-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  .post-title {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin: 1rem 0;
+  }
+
+  .post-meta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .post-date {
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border-radius: 20px;
+  }
+
+  .category-tag {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    margin: 0 0.3rem;
+    background: #e9ecef;
+    border-radius: 15px;
+    color: #495057;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+  }
+
+  .category-tag:hover {
+    background: #159957;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .post-content {
+    line-height: 1.8;
+    color: #2c3e50;
+  }
+
+  .post-content h2 {
+    color: #155799;
+    margin-top: 2rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #eee;
+  }
+
+  .post-content p {
+    margin: 1.5rem 0;
+  }
+
+  .post-content img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  .post-content code {
+    background: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: #e83e8c;
+  }
+
+  .post-content pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+
+  .post-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #f0f0f0;
+  }
+
+  .prev-post,
+  .next-post {
+    padding: 0.5rem 1rem;
+    color: #155799;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+  }
+
+  .prev-post:hover,
+  .next-post:hover {
+    background: #f8f9fa;
+    transform: translateX(5px);
+  }
+
+  .next-post:hover {
+    transform: translateX(-5px);
+  }
+
+  /* 代码高亮样式 */
+  .highlight {
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+  }
+
+  .highlight pre {
+    padding: 1rem;
+    margin: 0;
+    overflow-x: auto;
+  }
+
+  /* 引用样式 */
+  blockquote {
+    margin: 1.5rem 0;
+    padding: 1rem 1.5rem;
+    border-left: 4px solid #159957;
+    background: #f8f9fa;
+    color: #495057;
+    font-style: italic;
+  }
+
+  /* 表格样式 */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+  }
+
+  th, td {
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+  }
+
+  th {
+    background: #f8f9fa;
+    font-weight: 600;
+  }
+
+  tr:nth-child(even) {
+    background: #f8f9fa;
+  }
+
+  /* 链接动画 */
+  .post-content a {
+    color: #155799;
+    text-decoration: none;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .post-content a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: #155799;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+
+  .post-content a:hover::after {
+    transform: scaleX(1);
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+  // 为标题添加动画
+  const headers = document.querySelectorAll('h2, h3, h4, h5, h6');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate__animated', 'animate__fadeInLeft');
+        observer.unobserve(entry.target);
+      }
+    });
+  });
+
+  headers.forEach(header => {
+    observer.observe(header);
+  });
+
+  // 为图片添加动画
+  const images = document.querySelectorAll('img');
+  const imageObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate__animated', 'animate__fadeIn');
+        imageObserver.unobserve(entry.target);
+      }
+    });
+  });
+
+  images.forEach(image => {
+    imageObserver.observe(image);
+  });
+});
+</script>
