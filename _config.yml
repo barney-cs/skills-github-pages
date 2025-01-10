@@ -1,4 +1,16 @@
 theme: minima
-title: bootstrap
-author: barney-cs
-description: my github pages
+title: My GitHub Blog
+description: 分享技术与生活
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+# 社交链接
+github_username: barney-cs
+email: 
+
+# 主题设置
+show_excerpts: true
+header_pages:
+  - about.md
+  - archive.md
