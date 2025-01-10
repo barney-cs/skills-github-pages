@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en-US" data-theme="default">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <link rel="stylesheet" href="/assets/css/themes.css?v=">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  </head>
+  <body>
+    <!-- 主题切换器 -->
+    <div class="theme-switcher animate__animated animate__fadeIn">
+      <div class="theme-options">
+        <div class="theme-option active" data-theme="default" title="默认主题"></div>
+        <div class="theme-option" data-theme="dark" title="暗黑主题"></div>
+        <div class="theme-option" data-theme="ocean" title="海洋主题"></div>
+        <div class="theme-option" data-theme="forest" title="森林主题"></div>
+        <div class="theme-option" data-theme="sunset" title="日落主题"></div>
+      </div>
+    </div>
+
+    <div class="container-lg px-3 my-5 markdown-body">
+      <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">XXL-JOB 告警扩展实现</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-12-16T00:00:00+00:00" itemprop="datePublished">
+        Dec 16, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="xxl-job-告警扩展实现">XXL-JOB 告警扩展实现</h1>
+
+<h2 id="背景介绍">背景介绍</h2>
+
+<p>XXL-JOB 是一个分布式任务调度平台，默认提供了邮件告警功能。但在企业实际应用中，我们可能需要将告警信息推送到企业微信、钉钉等更多平台。本文将详细介绍如何扩展 XXL-JOB 的告警功能。</p>
+
+<h2 id="实现原理">实现原理</h2>
+
+<p>XXL-JOB 提供了告警接口 <code class="language-plaintext highlighter-rouge">com.xxl.job.admin.core.alarm.JobAlarm</code>，我们只需要实现这个接口并注册到 Spring 容器中即可。告警的触发时机包括任务调度失败、任务调度成功等。</p>
+
+<h2 id="代码实现">代码实现</h2>
+
+<h3 id="1-添加依赖">1. 添加依赖</h3>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>com.xxl.job<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>xxl-job-admin<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>${xxl-job.version}<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</code></pre></div></div>
+
+<h3 id="2-实现告警接口">2. 实现告警接口</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">CustomJobAlarm</span> <span class="kd">implements</span> <span class="nc">JobAlarm</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">Logger</span> <span class="n">logger</span> <span class="o">=</span> <span class="nc">LoggerFactory</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="nc">CustomJobAlarm</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">doAlarm</span><span class="o">(</span><span class="nc">XxlJobInfo</span> <span class="n">info</span><span class="o">,</span> <span class="nc">XxlJobLog</span> <span class="n">jobLog</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// 判断是否需要告警</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">info</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">jobLog</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="c1">// 构建告警信息</span>
+        <span class="nc">String</span> <span class="n">alarmContent</span> <span class="o">=</span> <span class="n">buildAlarmContent</span><span class="o">(</span><span class="n">info</span><span class="o">,</span> <span class="n">jobLog</span><span class="o">);</span>
+
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="c1">// 发送告警</span>
+            <span class="n">sendAlarm</span><span class="o">(</span><span class="n">alarmContent</span><span class="o">);</span>
+            <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="na">error</span><span class="o">(</span><span class="s">"Custom job alarm error:"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="nc">String</span> <span class="nf">buildAlarmContent</span><span class="o">(</span><span class="nc">XxlJobInfo</span> <span class="n">info</span><span class="o">,</span> <span class="nc">XxlJobLog</span> <span class="n">jobLog</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">StringBuilder</span> <span class="n">content</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">StringBuilder</span><span class="o">();</span>
+        <span class="n">content</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"任务告警通知：\\n"</span><span class="o">);</span>
+        <span class="n">content</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"任务ID："</span><span class="o">).</span><span class="na">append</span><span class="o">(</span><span class="n">info</span><span class="o">.</span><span class="na">getId</span><span class="o">()).</span><span class="na">append</span><span class="o">(</span><span class="s">"\\n"</span><span class="o">);</span>
+        <span class="n">content</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"任务名称："</span><span class="o">).</span><span class="na">append</span><span class="o">(</span><span class="n">info</span><span class="o">.</span><span class="na">getJobDesc</span><span class="o">()).</span><span class="na">append</span><span class="o">(</span><span class="s">"\\n"</span><span class="o">);</span>
+        <span class="n">content</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"执行时间："</span><span class="o">).</span><span class="na">append</span><span class="o">(</span><span class="nc">DateUtil</span><span class="o">.</span><span class="na">formatDateTime</span><span class="o">(</span><span class="k">new</span> <span class="nc">Date</span><span class="o">(</span><span class="n">jobLog</span><span class="o">.</span><span class="na">getTriggerTime</span><span class="o">()))).</span><span class="na">append</span><span class="o">(</span><span class="s">"\\n"</span><span class="o">);</span>
+        <span class="n">content</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"执行结果："</span><span class="o">).</span><span class="na">append</span><span class="o">(</span><span class="n">jobLog</span><span class="o">.</span><span class="na">getHandleMsg</span><span class="o">()).</span><span class="na">append</span><span class="o">(</span><span class="s">"\\n"</span><span class="o">);</span>
+        
+        <span class="k">if</span> <span class="o">(</span><span class="n">jobLog</span><span class="o">.</span><span class="na">getHandleCode</span><span class="o">()</span> <span class="o">==</span> <span class="mi">200</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">content</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"执行状态：成功"</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="n">content</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"执行状态：失败\\n"</span><span class="o">);</span>
+            <span class="n">content</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"失败原因："</span><span class="o">).</span><span class="na">append</span><span class="o">(</span><span class="n">jobLog</span><span class="o">.</span><span class="na">getTriggerMsg</span><span class="o">());</span>
+        <span class="o">}</span>
+        
+        <span class="k">return</span> <span class="n">content</span><span class="o">.</span><span class="na">toString</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">sendAlarm</span><span class="o">(</span><span class="nc">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// 这里实现具体的告警发送逻辑</span>
+        <span class="c1">// 例如：发送到企业微信</span>
+        <span class="n">sendToWecom</span><span class="o">(</span><span class="n">content</span><span class="o">);</span>
+        <span class="c1">// 或发送到钉钉</span>
+        <span class="n">sendToDingTalk</span><span class="o">(</span><span class="n">content</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">sendToWecom</span><span class="o">(</span><span class="nc">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">String</span> <span class="n">webhookUrl</span> <span class="o">=</span> <span class="s">"your-wecom-webhook-url"</span><span class="o">;</span>
+        <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">Object</span><span class="o">&gt;</span> <span class="n">message</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashMap</span><span class="o">&lt;&gt;();</span>
+        <span class="n">message</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"msgtype"</span><span class="o">,</span> <span class="s">"text"</span><span class="o">);</span>
+        
+        <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">String</span><span class="o">&gt;</span> <span class="n">text</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashMap</span><span class="o">&lt;&gt;();</span>
+        <span class="n">text</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"content"</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
+        <span class="n">message</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"text"</span><span class="o">,</span> <span class="n">text</span><span class="o">);</span>
+
+        <span class="c1">// 发送HTTP请求</span>
+        <span class="nc">HttpClient</span> <span class="n">client</span> <span class="o">=</span> <span class="nc">HttpClients</span><span class="o">.</span><span class="na">createDefault</span><span class="o">();</span>
+        <span class="nc">HttpPost</span> <span class="n">post</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HttpPost</span><span class="o">(</span><span class="n">webhookUrl</span><span class="o">);</span>
+        <span class="n">post</span><span class="o">.</span><span class="na">setHeader</span><span class="o">(</span><span class="s">"Content-Type"</span><span class="o">,</span> <span class="s">"application/json"</span><span class="o">);</span>
+        
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="nc">StringEntity</span> <span class="n">entity</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">StringEntity</span><span class="o">(</span><span class="k">new</span> <span class="nc">ObjectMapper</span><span class="o">().</span><span class="na">writeValueAsString</span><span class="o">(</span><span class="n">message</span><span class="o">),</span> <span class="s">"UTF-8"</span><span class="o">);</span>
+            <span class="n">post</span><span class="o">.</span><span class="na">setEntity</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+            <span class="n">client</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">post</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="na">error</span><span class="o">(</span><span class="s">"Send to Wecom error:"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">sendToDingTalk</span><span class="o">(</span><span class="nc">String</span> <span class="n">content</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">String</span> <span class="n">webhookUrl</span> <span class="o">=</span> <span class="s">"your-dingtalk-webhook-url"</span><span class="o">;</span>
+        <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">Object</span><span class="o">&gt;</span> <span class="n">message</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashMap</span><span class="o">&lt;&gt;();</span>
+        <span class="n">message</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"msgtype"</span><span class="o">,</span> <span class="s">"text"</span><span class="o">);</span>
+        
+        <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">String</span><span class="o">&gt;</span> <span class="n">text</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashMap</span><span class="o">&lt;&gt;();</span>
+        <span class="n">text</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"content"</span><span class="o">,</span> <span class="n">content</span><span class="o">);</span>
+        <span class="n">message</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"text"</span><span class="o">,</span> <span class="n">text</span><span class="o">);</span>
+
+        <span class="c1">// 发送HTTP请求</span>
+        <span class="nc">HttpClient</span> <span class="n">client</span> <span class="o">=</span> <span class="nc">HttpClients</span><span class="o">.</span><span class="na">createDefault</span><span class="o">();</span>
+        <span class="nc">HttpPost</span> <span class="n">post</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HttpPost</span><span class="o">(</span><span class="n">webhookUrl</span><span class="o">);</span>
+        <span class="n">post</span><span class="o">.</span><span class="na">setHeader</span><span class="o">(</span><span class="s">"Content-Type"</span><span class="o">,</span> <span class="s">"application/json"</span><span class="o">);</span>
+        
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="nc">StringEntity</span> <span class="n">entity</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">StringEntity</span><span class="o">(</span><span class="k">new</span> <span class="nc">ObjectMapper</span><span class="o">().</span><span class="na">writeValueAsString</span><span class="o">(</span><span class="n">message</span><span class="o">),</span> <span class="s">"UTF-8"</span><span class="o">);</span>
+            <span class="n">post</span><span class="o">.</span><span class="na">setEntity</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+            <span class="n">client</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">post</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="na">error</span><span class="o">(</span><span class="s">"Send to DingTalk error:"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="3-配置文件">3. 配置文件</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">xxl</span><span class="pi">:</span>
+  <span class="na">job</span><span class="pi">:</span>
+    <span class="na">alarm</span><span class="pi">:</span>
+      <span class="na">wecom</span><span class="pi">:</span>
+        <span class="na">webhook</span><span class="pi">:</span> <span class="s">${WECOM_WEBHOOK_URL:}</span>
+      <span class="na">dingtalk</span><span class="pi">:</span>
+        <span class="na">webhook</span><span class="pi">:</span> <span class="s">${DINGTALK_WEBHOOK_URL:}</span>
+</code></pre></div></div>
+
+<h2 id="进阶优化">进阶优化</h2>
+
+<h3 id="1-告警级别控制">1. 告警级别控制</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="nc">AlarmLevel</span> <span class="o">{</span>
+    <span class="no">INFO</span><span class="o">,</span>
+    <span class="no">WARNING</span><span class="o">,</span>
+    <span class="no">ERROR</span>
+<span class="o">}</span>
+
+<span class="kd">private</span> <span class="nc">AlarmLevel</span> <span class="nf">getAlarmLevel</span><span class="o">(</span><span class="nc">XxlJobLog</span> <span class="n">jobLog</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">jobLog</span><span class="o">.</span><span class="na">getHandleCode</span><span class="o">()</span> <span class="o">==</span> <span class="mi">200</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nc">AlarmLevel</span><span class="o">.</span><span class="na">INFO</span><span class="o">;</span>
+    <span class="o">}</span>
+    
+    <span class="c1">// 连续失败次数大于3次，升级为 ERROR</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">getConsecutiveFailures</span><span class="o">(</span><span class="n">jobLog</span><span class="o">.</span><span class="na">getJobId</span><span class="o">())</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nc">AlarmLevel</span><span class="o">.</span><span class="na">ERROR</span><span class="o">;</span>
+    <span class="o">}</span>
+    
+    <span class="k">return</span> <span class="nc">AlarmLevel</span><span class="o">.</span><span class="na">WARNING</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="2-告警限流">2. 告警限流</h3>
+
+<p>为了避免告警风暴，我们可以添加告警限流机制：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">AlarmRateLimiter</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="nc">LoadingCache</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">AtomicInteger</span><span class="o">&gt;</span> <span class="n">counter</span><span class="o">;</span>
+    
+    <span class="kd">public</span> <span class="nf">AlarmRateLimiter</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="nc">CacheBuilder</span><span class="o">.</span><span class="na">newBuilder</span><span class="o">()</span>
+            <span class="o">.</span><span class="na">expireAfterWrite</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="nc">TimeUnit</span><span class="o">.</span><span class="na">HOURS</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">build</span><span class="o">(</span><span class="k">new</span> <span class="nc">CacheLoader</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">AtomicInteger</span><span class="o">&gt;()</span> <span class="o">{</span>
+                <span class="nd">@Override</span>
+                <span class="kd">public</span> <span class="nc">AtomicInteger</span> <span class="nf">load</span><span class="o">(</span><span class="nc">String</span> <span class="n">key</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">return</span> <span class="k">new</span> <span class="nf">AtomicInteger</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+                <span class="o">}</span>
+            <span class="o">});</span>
+    <span class="o">}</span>
+    
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">shouldAlarm</span><span class="o">(</span><span class="nc">String</span> <span class="n">jobId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="nc">AtomicInteger</span> <span class="n">count</span> <span class="o">=</span> <span class="n">counter</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">jobId</span><span class="o">);</span>
+            <span class="k">return</span> <span class="n">count</span><span class="o">.</span><span class="na">incrementAndGet</span><span class="o">()</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="o">;</span> <span class="c1">// 每小时最多5次告警</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="3-告警模板定制">3. 告警模板定制</h3>
+
+<p>使用 Freemarker 或 Thymeleaf 来管理告警模板：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">AlarmTemplateManager</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="nc">Configuration</span> <span class="n">configuration</span><span class="o">;</span>
+    
+    <span class="kd">public</span> <span class="nf">AlarmTemplateManager</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">configuration</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Configuration</span><span class="o">(</span><span class="nc">Configuration</span><span class="o">.</span><span class="na">VERSION_2_3_31</span><span class="o">);</span>
+        <span class="n">configuration</span><span class="o">.</span><span class="na">setClassForTemplateLoading</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">getClass</span><span class="o">(),</span> <span class="s">"/templates"</span><span class="o">);</span>
+        <span class="n">configuration</span><span class="o">.</span><span class="na">setDefaultEncoding</span><span class="o">(</span><span class="s">"UTF-8"</span><span class="o">);</span>
+    <span class="o">}</span>
+    
+    <span class="kd">public</span> <span class="nc">String</span> <span class="nf">processTemplate</span><span class="o">(</span><span class="nc">String</span> <span class="n">templateName</span><span class="o">,</span> <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">Object</span><span class="o">&gt;</span> <span class="n">data</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="nc">Template</span> <span class="n">template</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="na">getTemplate</span><span class="o">(</span><span class="n">templateName</span><span class="o">);</span>
+            <span class="nc">StringWriter</span> <span class="n">writer</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">StringWriter</span><span class="o">();</span>
+            <span class="n">template</span><span class="o">.</span><span class="na">process</span><span class="o">(</span><span class="n">data</span><span class="o">,</span> <span class="n">writer</span><span class="o">);</span>
+            <span class="k">return</span> <span class="n">writer</span><span class="o">.</span><span class="na">toString</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="na">error</span><span class="o">(</span><span class="s">"Process template error:"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+            <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="最佳实践">最佳实践</h2>
+
+<ol>
+  <li><strong>分级告警</strong>
+    <ul>
+      <li>根据任务重要性设置不同告警级别</li>
+      <li>不同级别的告警发送到不同的群组或渠道</li>
+    </ul>
+  </li>
+  <li><strong>告警聚合</strong>
+    <ul>
+      <li>相同任务的多次失败告警进行聚合</li>
+      <li>设置合理的告警时间窗口</li>
+    </ul>
+  </li>
+  <li><strong>告警恢复</strong>
+    <ul>
+      <li>任务恢复正常后发送恢复通知</li>
+      <li>记录告警恢复时间，用于统计故障时长</li>
+    </ul>
+  </li>
+  <li><strong>监控大盘</strong>
+    <ul>
+      <li>统计告警频率和分布</li>
+      <li>分析任务健康状况</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="总结">总结</h2>
+
+<p>通过扩展 XXL-JOB 的告警功能，我们可以：</p>
+
+<ol>
+  <li>支持多种告警渠道</li>
+  <li>实现更灵活的告警策略</li>
+  <li>提供更丰富的告警内容</li>
+  <li>更好地监控和管理任务执行状态</li>
+</ol>
+
+<p>这些扩展不仅提高了系统的可维护性，也让运维人员能够更快速地发现和解决问题。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+  <li><a href="https://www.xuxueli.com/xxl-job/">XXL-JOB官方文档</a></li>
+  <li><a href="https://work.weixin.qq.com/api/doc/90000/90136/91770">企业微信群机器人配置说明</a></li>
+  <li><a href="https://developers.dingtalk.com/document/robots/custom-robot-access">钉钉自定义机器人配置说明</a></li>
+</ul>
+
+  </div>
+
+  <div class="post-categories">
+    
+    <p class="post-meta">
+      分类：
+      
+      <span class="post-category">技术分享</span>
+      
+      <span class="post-category">Java</span>
+      
+    </p>
+    
+  </div>
+
+  <div class="post-tags">
+    
+    <p class="post-meta">
+      标签：
+      
+      <span class="post-tag">XXL-JOB</span>
+      
+      <span class="post-tag">告警</span>
+      
+      <span class="post-tag">扩展开发</span>
+      
+    </p>
+    
+  </div>
+
+  
+  <div id="gitalk-container"></div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+  <script src="/assets/js/gitalk-config.js"></script>
+  <script>
+    var gitalk = new Gitalk({
+      clientID: GITALK_CLIENT_ID,
+      clientSecret: GITALK_CLIENT_SECRET,
+      repo: 'skills-github-pages',
+      owner: 'barney-cs',
+      admin: ["barney-cs"],
+      id: location.pathname.substring(0, 50),
+      language: 'zh-CN',
+      distractionFreeMode: false
+    });
+
+    gitalk.render('gitalk-container');
+  </script>
+
+  <style>
+  #gitalk-container {
+      margin-top: 50px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+
+  .gt-container .gt-btn {
+      background-color: #1e80ff !important;
+      border-color: #1e80ff !important;
+  }
+
+  .gt-container .gt-btn:hover {
+      background-color: #0366d6 !important;
+      border-color: #0366d6 !important;
+  }
+
+  .gt-container .gt-link {
+      color: #1e80ff !important;
+  }
+
+  .gt-container .gt-link:hover {
+      color: #0366d6 !important;
+  }
+
+  .gt-container .gt-header-controls-tip {
+      color: #666 !important;
+  }
+  </style>
+  
+
+  <a class="u-url" href="/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/java/2024/12/16/XxlJobAlarm.html" hidden></a>
+</article>
+
+<style>
+.post-category {
+    background: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.post-tag {
+    background: #e8f0ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #0366d6;
+}
+
+/* 代码高亮 */
+.highlight {
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+}
+
+.highlight pre {
+  padding: 1rem;
+  margin: 0;
+  overflow-x: auto;
+}
+
+/* 引用样式 */
+blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid #1e80ff;
+  background: #f4f5f5;
+  color: #666;
+}
+
+/* 表格样式 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+th, td {
+  padding: 0.75rem;
+  border: 1px solid #eee;
+}
+
+th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.gt-error-msg {
+  text-align: center;
+  padding: 1rem;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+</style>
+
+    </div>
+
+    <script>
+      // 主题切换功能
+      document.addEventListener('DOMContentLoaded', function() {
+        const themeOptions = document.querySelectorAll('.theme-option');
+        const root = document.documentElement;
+        
+        // 从本地存储加载主题
+        const savedTheme = localStorage.getItem('selected-theme');
+        if (savedTheme) {
+          root.setAttribute('data-theme', savedTheme);
+          themeOptions.forEach(option => {
+            option.classList.toggle('active', option.dataset.theme === savedTheme);
+          });
+        }
+
+        // 主题切换事件监听
+        themeOptions.forEach(option => {
+          option.addEventListener('click', function() {
+            const theme = this.dataset.theme;
+            
+            // 更新激活状态
+            themeOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 应用主题
+            root.setAttribute('data-theme', theme);
+            
+            // 保存到本地存储
+            localStorage.setItem('selected-theme', theme);
+
+            // 添加切换动画
+            document.body.style.transition = 'background-color 0.3s ease';
+            document.querySelectorAll('*').forEach(element => {
+              element.style.transition = 'all 0.3s ease';
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
