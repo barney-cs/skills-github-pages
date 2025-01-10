@@ -36,6 +36,20 @@
 ehthumbs.db
 Thumbs.db
 
+# Jekyll
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
 
-.idea
-.project
+# Environment variables
+.env
+.env.*
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

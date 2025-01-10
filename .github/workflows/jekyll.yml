@@ -1,0 +1,38 @@
+name: Jekyll site CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+        bundler-cache: true
+
+    - name: Install dependencies
+      run: bundle install
+
+    - name: Build site
+      env:
+        GITALK_CLIENT_ID: ${{ secrets.GITALK_CLIENT_ID }}
+        GITALK_CLIENT_SECRET: ${{ secrets.GITALK_CLIENT_SECRET }}
+      run: |
+        echo "var GITALK_CLIENT_ID='$GITALK_CLIENT_ID';" > assets/js/gitalk-config.js
+        echo "var GITALK_CLIENT_SECRET='$GITALK_CLIENT_SECRET';" >> assets/js/gitalk-config.js
+        bundle exec jekyll build
+
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_site
