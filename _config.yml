@@ -1,16 +1,24 @@
+title: 技术分享
+description: 分享技术，记录生活
 theme: minima
-title: My GitHub Blog
-description: 分享技术与生活
-plugins:
-  - jekyll-feed
-  - jekyll-seo-tag
 
-# 社交链接
+# GitHub配置
 github_username: barney-cs
-email: 
+repository: barney-cs/skills-github-pages
+
+# Gitalk配置
+gitalk:
+  enable: true
+  clientID: YOUR_CLIENT_ID    # 替换为你的 Client ID
+  clientSecret: YOUR_CLIENT_SECRET    # 替换为你的 Client Secret
+  repo: skills-github-pages    # 存储评论的仓库名
+  owner: barney-cs    # 你的 GitHub 用户名
+  admin: ['barney-cs']    # 管理员用户名列表
+  language: zh-CN    # 设置语言为中文
 
 # 主题设置
 show_excerpts: true
-header_pages:
-  - about.md
-  - archive.md
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag

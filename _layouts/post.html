@@ -1,225 +1,126 @@
 ---
 layout: default
 ---
-<article class="article-container animate__animated animate__fadeIn">
-  <header class="article-header">
-    <div class="article-meta">
-      <div class="meta-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-          <path fill="currentColor" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.37V7z"/>
-        </svg>
-        <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y年%m月%d日" }}</time>
-      </div>
-      {% if page.author %}
-      <div class="meta-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-          <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-        </svg>
-        <span>{{ page.author }}</span>
-      </div>
-      {% endif %}
-      {% if page.categories.size > 0 %}
-      <div class="meta-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-          <path fill="currentColor" d="M10 3H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zM9 9H5V5h4v4zm11-6h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-1 6h-4V5h4v4zm-9 4H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1zm-1 6H5v-4h4v4zm8-6c-2.206 0-4 1.794-4 4s1.794 4 4 4 4-1.794 4-4-1.794-4-4-4zm0 6c-1.103 0-2-.897-2-2s.897-2 2-2 2 .897 2 2-.897 2-2 2z"/>
-        </svg>
-        {% for category in page.categories %}
-        <span class="category-tag">{{ category }}</span>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">{{ page.title | escape }}</h1>
+    <p class="post-meta">
+      {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
+      <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
+        {{ page.date | date: date_format }}
+      </time>
+      {%- if page.modified_date -%}
+        ~ 
+        {%- assign mdate = page.modified_date | date_to_xmlschema -%}
+        <time class="dt-modified" datetime="{{ mdate }}" itemprop="dateModified">
+          {{ mdate | date: date_format }}
+        </time>
+      {%- endif -%}
+      {%- if page.author -%}
+        • {% for author in page.author %}
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">{{ author }}</span></span>
+            {%- if forloop.last == false %}, {% endif -%}
         {% endfor %}
-      </div>
-      {% endif %}
-    </div>
-    <h1 class="article-title">{{ page.title }}</h1>
+      {%- endif -%}</p>
   </header>
 
-  <div class="article-content">
+  <div class="post-content e-content" itemprop="articleBody">
     {{ content }}
   </div>
 
-  {% if page.tags.size > 0 %}
-  <div class="article-tags">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-      <path fill="currentColor" d="M10.9 2.1l9.899 1.415 1.414 9.9-9.192 9.192a1 1 0 0 1-1.414 0l-9.9-9.9a1 1 0 0 1 0-1.414L10.9 2.1zm.707 2.122L3.828 12l8.486 8.485 7.778-7.778-1.06-7.425-7.425-1.06zm2.12 6.364a2 2 0 1 1-2.828-2.828 2 2 0 0 1 2.828 2.828z"/>
-    </svg>
-    {% for tag in page.tags %}
-    <span class="tag">{{ tag }}</span>
-    {% endfor %}
+  <div class="post-categories">
+    {% if page.categories.size > 0 %}
+    <p class="post-meta">
+      分类：
+      {% for category in page.categories %}
+      <span class="post-category">{{ category }}</span>
+      {% endfor %}
+    </p>
+    {% endif %}
   </div>
+
+  <div class="post-tags">
+    {% if page.tags.size > 0 %}
+    <p class="post-meta">
+      标签：
+      {% for tag in page.tags %}
+      <span class="post-tag">{{ tag }}</span>
+      {% endfor %}
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- Gitalk 评论框 -->
+  {% if site.gitalk.enable %}
+  <div id="gitalk-container"></div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+  <script>
+    var gitalk = new Gitalk({
+      clientID: '{{ site.gitalk.clientID }}',
+      clientSecret: '{{ site.gitalk.clientSecret }}',
+      repo: '{{ site.gitalk.repo }}',
+      owner: '{{ site.gitalk.owner }}',
+      admin: {{ site.gitalk.admin | jsonify }},
+      id: location.pathname.substring(0, 50),      // 限制长度
+      distractionFreeMode: false  // 无干扰模式
+    })
+    gitalk.render('gitalk-container')
+  </script>
   {% endif %}
 
-  <div class="article-navigation">
-    <div class="nav-item prev">
-      {% if page.previous.url %}
-      <a href="{{page.previous.url}}" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-          <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-        </svg>
-        <div class="nav-content">
-          <span class="nav-label">上一篇</span>
-          <span class="nav-title">{{ page.previous.title }}</span>
-        </div>
-      </a>
-      {% endif %}
-    </div>
-    <div class="nav-item next">
-      {% if page.next.url %}
-      <a href="{{page.next.url}}" class="nav-link">
-        <div class="nav-content">
-          <span class="nav-label">下一篇</span>
-          <span class="nav-title">{{ page.next.title }}</span>
-        </div>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-          <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-        </svg>
-      </a>
-      {% endif %}
-    </div>
-  </div>
+  <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
 </article>
 
 <style>
-.article-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+.post-category {
+    background: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #666;
 }
 
-.article-header {
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid #eee;
+.post-tag {
+    background: #e8f0ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #0366d6;
 }
 
-.article-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  color: #666;
-  font-size: 0.9rem;
+#gitalk-container {
+    margin-top: 50px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
 }
 
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.gt-container .gt-btn {
+    background-color: #1e80ff !important;
+    border-color: #1e80ff !important;
 }
 
-.meta-item svg {
-  color: #1e80ff;
+.gt-container .gt-btn:hover {
+    background-color: #0366d6 !important;
+    border-color: #0366d6 !important;
 }
 
-.article-title {
-  font-size: 2rem;
-  color: #1d2129;
-  margin: 1rem 0;
+.gt-container .gt-link {
+    color: #1e80ff !important;
 }
 
-.category-tag {
-  padding: 0.2rem 0.6rem;
-  background: #f4f5f5;
-  border-radius: 3px;
-  color: #1e80ff;
-  font-size: 0.9rem;
+.gt-container .gt-link:hover {
+    color: #0366d6 !important;
 }
 
-.article-content {
-  line-height: 1.8;
-  color: #333;
-  margin: 2rem 0;
-}
-
-.article-content h2 {
-  font-size: 1.5rem;
-  color: #1d2129;
-  margin: 2rem 0 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eee;
-}
-
-.article-content p {
-  margin: 1rem 0;
-}
-
-.article-content img {
-  max-width: 100%;
-  border-radius: 4px;
-  margin: 1rem 0;
-}
-
-.article-content pre {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 4px;
-  overflow-x: auto;
-}
-
-.article-content code {
-  background: #f4f5f5;
-  padding: 0.2rem 0.4rem;
-  border-radius: 3px;
-  font-size: 0.9em;
-  color: #1e80ff;
-}
-
-.article-tags {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 2rem 0;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.tag {
-  padding: 0.2rem 0.6rem;
-  background: #f4f5f5;
-  border-radius: 3px;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.article-navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid #eee;
-}
-
-.nav-item {
-  max-width: 45%;
-}
-
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #666;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.nav-link:hover {
-  color: #1e80ff;
-}
-
-.nav-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.nav-label {
-  font-size: 0.9rem;
-  color: #999;
-}
-
-.nav-title {
-  font-size: 1rem;
-  color: inherit;
+.gt-container .gt-header-controls-tip {
+    color: #666 !important;
 }
 
 /* 代码高亮 */
