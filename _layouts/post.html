@@ -71,6 +71,38 @@ layout: default
 
     gitalk.render('gitalk-container');
   </script>
+
+  <style>
+  #gitalk-container {
+      margin-top: 50px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+
+  .gt-container .gt-btn {
+      background-color: #1e80ff !important;
+      border-color: #1e80ff !important;
+  }
+
+  .gt-container .gt-btn:hover {
+      background-color: #0366d6 !important;
+      border-color: #0366d6 !important;
+  }
+
+  .gt-container .gt-link {
+      color: #1e80ff !important;
+  }
+
+  .gt-container .gt-link:hover {
+      color: #0366d6 !important;
+  }
+
+  .gt-container .gt-header-controls-tip {
+      color: #666 !important;
+  }
+  </style>
   {% endif %}
 
   <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
@@ -93,44 +125,6 @@ layout: default
     margin-right: 8px;
     font-size: 0.9em;
     color: #0366d6;
-}
-
-#gitalk-container {
-    margin-top: 50px;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-}
-
-.gt-container .gt-btn {
-    background-color: #1e80ff !important;
-    border-color: #1e80ff !important;
-}
-
-.gt-container .gt-btn:hover {
-    background-color: #0366d6 !important;
-    border-color: #0366d6 !important;
-}
-
-.gt-container .gt-link {
-    color: #1e80ff !important;
-}
-
-.gt-container .gt-link:hover {
-    color: #0366d6 !important;
-}
-
-.gt-container .gt-header-controls-tip {
-    color: #666 !important;
-}
-
-.gt-error-msg {
-  text-align: center;
-  padding: 1rem;
-  color: #666;
-  background: #f8f9fa;
-  border-radius: 4px;
 }
 
 /* 代码高亮 */
@@ -175,5 +169,13 @@ th {
 
 tr:nth-child(even) {
   background: #f8f9fa;
+}
+
+.gt-error-msg {
+  text-align: center;
+  padding: 1rem;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 4px;
 }
 </style>
