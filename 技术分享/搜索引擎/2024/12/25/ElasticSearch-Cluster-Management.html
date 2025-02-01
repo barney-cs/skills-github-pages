@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en-US" data-theme="default">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <link rel="stylesheet" href="/assets/css/themes.css?v=">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  </head>
+  <body>
+    <!-- 主题切换器 -->
+    <div class="theme-switcher animate__animated animate__fadeIn">
+      <div class="theme-options">
+        <div class="theme-option active" data-theme="default" title="默认主题"></div>
+        <div class="theme-option" data-theme="dark" title="暗黑主题"></div>
+        <div class="theme-option" data-theme="ocean" title="海洋主题"></div>
+        <div class="theme-option" data-theme="forest" title="森林主题"></div>
+        <div class="theme-option" data-theme="sunset" title="日落主题"></div>
+      </div>
+    </div>
+
+    <div class="container-lg px-3 my-5 markdown-body">
+      <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">ElasticSearch 集群管理与运维指南</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-12-25T00:00:00+00:00" itemprop="datePublished">
+        Dec 25, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="elasticsearch-集群管理与运维指南">ElasticSearch 集群管理与运维指南</h1>
+
+<h2 id="集群架构设计">集群架构设计</h2>
+
+<h3 id="1-节点角色规划">1. 节点角色规划</h3>
+
+<p>ElasticSearch 集群中的节点可以承担不同的角色：</p>
+
+<ul>
+  <li>Master 节点：负责集群管理</li>
+  <li>Data 节点：存储数据和执行操作</li>
+  <li>Coordinating 节点：负责请求路由</li>
+  <li>Ingest 节点：数据预处理</li>
+</ul>
+
+<p>配置示例：</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># elasticsearch.yml</span>
+<span class="na">node.master</span><span class="pi">:</span> <span class="kc">true</span>
+<span class="na">node.data</span><span class="pi">:</span> <span class="kc">false</span>
+<span class="na">node.ingest</span><span class="pi">:</span> <span class="kc">false</span>
+</code></pre></div></div>
+
+<h3 id="2-集群规模评估">2. 集群规模评估</h3>
+
+<h4 id="资源需求计算">资源需求计算</h4>
+
+<ul>
+  <li>存储空间 = 原始数据 * (1 + 副本数) * (1 + 索引开销)</li>
+  <li>内存分配 = JVM堆内存 + 操作系统缓存</li>
+</ul>
+
+<h4 id="节点配置建议">节点配置建议</h4>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 主节点配置</span>
+<span class="na">cluster.name</span><span class="pi">:</span> <span class="s">es-prod</span>
+<span class="na">node.name</span><span class="pi">:</span> <span class="s">master-1</span>
+<span class="na">node.master</span><span class="pi">:</span> <span class="kc">true</span>
+<span class="na">node.data</span><span class="pi">:</span> <span class="kc">false</span>
+<span class="na">network.host</span><span class="pi">:</span> <span class="s">192.168.1.10</span>
+<span class="na">discovery.seed_hosts</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">192.168.1.10"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">192.168.1.11"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">192.168.1.12"</span><span class="pi">]</span>
+<span class="na">cluster.initial_master_nodes</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">master-1"</span><span class="pi">]</span>
+
+<span class="c1"># 数据节点配置</span>
+<span class="na">cluster.name</span><span class="pi">:</span> <span class="s">es-prod</span>
+<span class="na">node.name</span><span class="pi">:</span> <span class="s">data-1</span>
+<span class="na">node.master</span><span class="pi">:</span> <span class="kc">false</span>
+<span class="na">node.data</span><span class="pi">:</span> <span class="kc">true</span>
+<span class="na">network.host</span><span class="pi">:</span> <span class="s">192.168.1.20</span>
+<span class="na">discovery.seed_hosts</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">192.168.1.10"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">192.168.1.11"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">192.168.1.12"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<h2 id="集群运维管理">集群运维管理</h2>
+
+<h3 id="1-集群扩容">1. 集群扩容</h3>
+
+<h4 id="水平扩容">水平扩容</h4>
+
+<ol>
+  <li>准备新节点</li>
+  <li>配置新节点</li>
+  <li>启动并加入集群</li>
+  <li>等待数据再平衡</li>
+</ol>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 检查集群状态</span>
+GET _cluster/health
+
+<span class="c"># 查看节点列表</span>
+GET _cat/nodes?v
+
+<span class="c"># 监控再平衡进度</span>
+GET _cat/recovery?v
+</code></pre></div></div>
+
+<h4 id="垂直扩容">垂直扩容</h4>
+
+<ol>
+  <li>升级节点配置</li>
+  <li>调整 JVM 参数</li>
+</ol>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># jvm.options</span>
+<span class="nt">-Xms16g</span>
+<span class="nt">-Xmx16g</span>
+</code></pre></div></div>
+
+<h3 id="2-数据备份与恢复">2. 数据备份与恢复</h3>
+
+<h4 id="快照管理">快照管理</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 注册快照仓库</span>
+PUT _snapshot/my_backup
+<span class="o">{</span>
+    <span class="s2">"type"</span>: <span class="s2">"fs"</span>,
+    <span class="s2">"settings"</span>: <span class="o">{</span>
+        <span class="s2">"location"</span>: <span class="s2">"/mount/backups/es"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c"># 创建快照</span>
+PUT _snapshot/my_backup/snapshot_1
+<span class="o">{</span>
+    <span class="s2">"indices"</span>: <span class="s2">"index_*"</span>,
+    <span class="s2">"ignore_unavailable"</span>: <span class="nb">true</span>
+<span class="o">}</span>
+
+<span class="c"># 恢复快照</span>
+POST _snapshot/my_backup/snapshot_1/_restore
+<span class="o">{</span>
+    <span class="s2">"indices"</span>: <span class="s2">"index_1"</span>,
+    <span class="s2">"rename_pattern"</span>: <span class="s2">"index_(.+)"</span>,
+    <span class="s2">"rename_replacement"</span>: <span class="s2">"restored_index_</span><span class="nv">$1</span><span class="s2">"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="3-集群监控">3. 集群监控</h3>
+
+<h4 id="监控指标">监控指标</h4>
+
+<ol>
+  <li>集群健康状态</li>
+  <li>节点状态</li>
+  <li>索引状态</li>
+  <li>分片分配</li>
+  <li>JVM 使用情况</li>
+</ol>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 查看集群统计信息</span>
+GET _cluster/stats
+
+<span class="c"># 查看节点统计信息</span>
+GET _nodes/stats
+
+<span class="c"># 查看索引统计信息</span>
+GET _cat/indices?v
+</code></pre></div></div>
+
+<h4 id="监控工具">监控工具</h4>
+
+<ul>
+  <li>Kibana Monitoring</li>
+  <li>Elasticsearch Exporter + Prometheus + Grafana</li>
+  <li>ElasticHQ</li>
+</ul>
+
+<h3 id="4-性能调优">4. 性能调优</h3>
+
+<h4 id="系统层面">系统层面</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 系统参数优化</span>
+vm.max_map_count<span class="o">=</span>262144
+vm.swappiness<span class="o">=</span>1
+</code></pre></div></div>
+
+<h4 id="es配置层面">ES配置层面</h4>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># elasticsearch.yml</span>
+<span class="na">indices.memory.index_buffer_size</span><span class="pi">:</span> <span class="s">30%</span>
+<span class="na">indices.queries.cache.size</span><span class="pi">:</span> <span class="s">20%</span>
+<span class="na">thread_pool.write.queue_size</span><span class="pi">:</span> <span class="m">1000</span>
+</code></pre></div></div>
+
+<h2 id="问题排查与解决">问题排查与解决</h2>
+
+<h3 id="1-集群红色状态处理">1. 集群红色状态处理</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 查看集群健康状态</span>
+GET _cluster/health
+
+<span class="c"># 查看未分配分片</span>
+GET _cat/shards?v&amp;h<span class="o">=</span>index,shard,prirep,state,unassigned.reason
+
+<span class="c"># 手动分配分片</span>
+POST _cluster/reroute
+<span class="o">{</span>
+    <span class="s2">"commands"</span>: <span class="o">[</span>
+        <span class="o">{</span>
+            <span class="s2">"allocate_replica"</span>: <span class="o">{</span>
+                <span class="s2">"index"</span>: <span class="s2">"my_index"</span>,
+                <span class="s2">"shard"</span>: 0,
+                <span class="s2">"node"</span>: <span class="s2">"node_name"</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">]</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="2-性能问题排查">2. 性能问题排查</h3>
+
+<h4 id="慢查询分析">慢查询分析</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 开启慢查询日志</span>
+PUT _cluster/settings
+<span class="o">{</span>
+    <span class="s2">"transient"</span>: <span class="o">{</span>
+        <span class="s2">"index.search.slowlog.threshold.query.warn"</span>: <span class="s2">"10s"</span>,
+        <span class="s2">"index.search.slowlog.threshold.fetch.warn"</span>: <span class="s2">"1s"</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c"># 查看热点线程</span>
+GET _nodes/hot_threads
+</code></pre></div></div>
+
+<h4 id="内存问题排查">内存问题排查</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 查看段合并情况</span>
+GET _cat/segments?v
+
+<span class="c"># 强制合并</span>
+POST my_index/_forcemerge
+</code></pre></div></div>
+
+<h2 id="日常运维操作">日常运维操作</h2>
+
+<h3 id="1-索引生命周期管理">1. 索引生命周期管理</h3>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">PUT</span><span class="w"> </span><span class="err">_ilm/policy/my_policy</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="nl">"policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"phases"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"hot"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                    </span><span class="nl">"rollover"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                        </span><span class="nl">"max_size"</span><span class="p">:</span><span class="w"> </span><span class="s2">"50GB"</span><span class="p">,</span><span class="w">
+                        </span><span class="nl">"max_age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"30d"</span><span class="w">
+                    </span><span class="p">}</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"warm"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"min_age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"30d"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                    </span><span class="nl">"shrink"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                        </span><span class="nl">"number_of_shards"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+                    </span><span class="p">},</span><span class="w">
+                    </span><span class="nl">"forcemerge"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                        </span><span class="nl">"max_num_segments"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+                    </span><span class="p">}</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"cold"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"min_age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"60d"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                    </span><span class="nl">"freeze"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"delete"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"min_age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"90d"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                    </span><span class="nl">"delete"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="2-集群升级">2. 集群升级</h3>
+
+<h4 id="滚动升级步骤">滚动升级步骤</h4>
+
+<ol>
+  <li>禁用分片分配
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PUT _cluster/settings
+<span class="o">{</span>
+ <span class="s2">"persistent"</span>: <span class="o">{</span>
+     <span class="s2">"cluster.routing.allocation.enable"</span>: <span class="s2">"none"</span>
+ <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li>停止单个节点</li>
+  <li>升级节点</li>
+  <li>启动节点并确认加入集群</li>
+  <li>重新启用分片分配
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PUT _cluster/settings
+<span class="o">{</span>
+ <span class="s2">"persistent"</span>: <span class="o">{</span>
+     <span class="s2">"cluster.routing.allocation.enable"</span>: null
+ <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li>等待集群恢复</li>
+  <li>重复以上步骤直到所有节点升级完成</li>
+</ol>
+
+<h2 id="总结">总结</h2>
+
+<p>ElasticSearch 集群的管理和运维是一个复杂的工作，需要对系统有深入的了解。本文介绍的内容涵盖了日常运维中的主要场景，希望能够帮助大家更好地管理 ElasticSearch 集群。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+  <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/operations.html">ElasticSearch 运维实战</a></li>
+  <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-management.html">ElasticSearch 集群管理</a></li>
+  <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/monitoring-overview.html">ElasticSearch 监控指南</a></li>
+</ul>
+
+  </div>
+
+  <div class="post-categories">
+    
+    <p class="post-meta">
+      分类：
+      
+      <span class="post-category">技术分享</span>
+      
+      <span class="post-category">搜索引擎</span>
+      
+    </p>
+    
+  </div>
+
+  <div class="post-tags">
+    
+    <p class="post-meta">
+      标签：
+      
+      <span class="post-tag">ElasticSearch</span>
+      
+      <span class="post-tag">集群管理</span>
+      
+      <span class="post-tag">运维</span>
+      
+    </p>
+    
+  </div>
+
+  
+  <div id="gitalk-container"></div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+  <script src="/assets/js/gitalk-config.js"></script>
+  <script>
+    var gitalk = new Gitalk({
+      clientID: GITALK_CLIENT_ID,
+      clientSecret: GITALK_CLIENT_SECRET,
+      repo: 'skills-github-pages',
+      owner: 'barney-cs',
+      admin: ["barney-cs"],
+      id: location.pathname.substring(0, 50),
+      language: 'zh-CN',
+      distractionFreeMode: false
+    });
+
+    gitalk.render('gitalk-container');
+  </script>
+
+  <style>
+  #gitalk-container {
+      margin-top: 50px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+
+  .gt-container .gt-btn {
+      background-color: #1e80ff !important;
+      border-color: #1e80ff !important;
+  }
+
+  .gt-container .gt-btn:hover {
+      background-color: #0366d6 !important;
+      border-color: #0366d6 !important;
+  }
+
+  .gt-container .gt-link {
+      color: #1e80ff !important;
+  }
+
+  .gt-container .gt-link:hover {
+      color: #0366d6 !important;
+  }
+
+  .gt-container .gt-header-controls-tip {
+      color: #666 !important;
+  }
+  </style>
+  
+
+  <a class="u-url" href="/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E/2024/12/25/ElasticSearch-Cluster-Management.html" hidden></a>
+</article>
+
+<style>
+.post-category {
+    background: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.post-tag {
+    background: #e8f0ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #0366d6;
+}
+
+/* 代码高亮 */
+.highlight {
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+}
+
+.highlight pre {
+  padding: 1rem;
+  margin: 0;
+  overflow-x: auto;
+}
+
+/* 引用样式 */
+blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid #1e80ff;
+  background: #f4f5f5;
+  color: #666;
+}
+
+/* 表格样式 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+th, td {
+  padding: 0.75rem;
+  border: 1px solid #eee;
+}
+
+th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.gt-error-msg {
+  text-align: center;
+  padding: 1rem;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+</style>
+
+    </div>
+
+    <script>
+      // 主题切换功能
+      document.addEventListener('DOMContentLoaded', function() {
+        const themeOptions = document.querySelectorAll('.theme-option');
+        const root = document.documentElement;
+        
+        // 从本地存储加载主题
+        const savedTheme = localStorage.getItem('selected-theme');
+        if (savedTheme) {
+          root.setAttribute('data-theme', savedTheme);
+          themeOptions.forEach(option => {
+            option.classList.toggle('active', option.dataset.theme === savedTheme);
+          });
+        }
+
+        // 主题切换事件监听
+        themeOptions.forEach(option => {
+          option.addEventListener('click', function() {
+            const theme = this.dataset.theme;
+            
+            // 更新激活状态
+            themeOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 应用主题
+            root.setAttribute('data-theme', theme);
+            
+            // 保存到本地存储
+            localStorage.setItem('selected-theme', theme);
+
+            // 添加切换动画
+            document.body.style.transition = 'background-color 0.3s ease';
+            document.querySelectorAll('*').forEach(element => {
+              element.style.transition = 'all 0.3s ease';
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

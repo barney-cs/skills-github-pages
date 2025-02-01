@@ -1,0 +1,2 @@
+var GITALK_CLIENT_ID='';
+var GITALK_CLIENT_SECRET='';

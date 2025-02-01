@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en-US" data-theme="default">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <link rel="stylesheet" href="/assets/css/themes.css?v=">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  </head>
+  <body>
+    <!-- 主题切换器 -->
+    <div class="theme-switcher animate__animated animate__fadeIn">
+      <div class="theme-options">
+        <div class="theme-option active" data-theme="default" title="默认主题"></div>
+        <div class="theme-option" data-theme="dark" title="暗黑主题"></div>
+        <div class="theme-option" data-theme="ocean" title="海洋主题"></div>
+        <div class="theme-option" data-theme="forest" title="森林主题"></div>
+        <div class="theme-option" data-theme="sunset" title="日落主题"></div>
+      </div>
+    </div>
+
+    <div class="container-lg px-3 my-5 markdown-body">
+      <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">测试第一篇博客</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-12-13T00:00:00+00:00" itemprop="datePublished">
+        Dec 13, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="欢迎来到我的第一篇博客">欢迎来到我的第一篇博客</h1>
+
+<p>这是我的第一篇博客文章，我将在这里分享一些有趣的内容。</p>
+
+<h2 id="为什么写博客">为什么写博客？</h2>
+
+<p>写博客可以帮助我们：</p>
+
+<ol>
+  <li>整理思路</li>
+  <li>分享知识</li>
+  <li>记录成长</li>
+</ol>
+
+<h2 id="代码示例">代码示例</h2>
+
+<p>这是一个简单的Python代码示例：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">hello_world</span><span class="p">():</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">Hello, World!</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="nf">hello_world</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="总结">总结</h2>
+
+<p>希望这篇文章能够帮助你了解我的博客风格。让我们一起在技术的道路上不断进步！</p>
+
+<blockquote>
+  <p>学习永无止境，让我们继续前进！</p>
+</blockquote>
+
+  </div>
+
+  <div class="post-categories">
+    
+    <p class="post-meta">
+      分类：
+      
+      <span class="post-category">测试</span>
+      
+      <span class="post-category">博客</span>
+      
+    </p>
+    
+  </div>
+
+  <div class="post-tags">
+    
+  </div>
+
+  
+  <div id="gitalk-container"></div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+  <script src="/assets/js/gitalk-config.js"></script>
+  <script>
+    var gitalk = new Gitalk({
+      clientID: GITALK_CLIENT_ID,
+      clientSecret: GITALK_CLIENT_SECRET,
+      repo: 'skills-github-pages',
+      owner: 'barney-cs',
+      admin: ["barney-cs"],
+      id: location.pathname.substring(0, 50),
+      language: 'zh-CN',
+      distractionFreeMode: false
+    });
+
+    gitalk.render('gitalk-container');
+  </script>
+
+  <style>
+  #gitalk-container {
+      margin-top: 50px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+
+  .gt-container .gt-btn {
+      background-color: #1e80ff !important;
+      border-color: #1e80ff !important;
+  }
+
+  .gt-container .gt-btn:hover {
+      background-color: #0366d6 !important;
+      border-color: #0366d6 !important;
+  }
+
+  .gt-container .gt-link {
+      color: #1e80ff !important;
+  }
+
+  .gt-container .gt-link:hover {
+      color: #0366d6 !important;
+  }
+
+  .gt-container .gt-header-controls-tip {
+      color: #666 !important;
+  }
+  </style>
+  
+
+  <a class="u-url" href="/%E6%B5%8B%E8%AF%95/%E5%8D%9A%E5%AE%A2/2024/12/13/TestFirstBlog.html" hidden></a>
+</article>
+
+<style>
+.post-category {
+    background: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.post-tag {
+    background: #e8f0ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #0366d6;
+}
+
+/* 代码高亮 */
+.highlight {
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+}
+
+.highlight pre {
+  padding: 1rem;
+  margin: 0;
+  overflow-x: auto;
+}
+
+/* 引用样式 */
+blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid #1e80ff;
+  background: #f4f5f5;
+  color: #666;
+}
+
+/* 表格样式 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+th, td {
+  padding: 0.75rem;
+  border: 1px solid #eee;
+}
+
+th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.gt-error-msg {
+  text-align: center;
+  padding: 1rem;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+</style>
+
+    </div>
+
+    <script>
+      // 主题切换功能
+      document.addEventListener('DOMContentLoaded', function() {
+        const themeOptions = document.querySelectorAll('.theme-option');
+        const root = document.documentElement;
+        
+        // 从本地存储加载主题
+        const savedTheme = localStorage.getItem('selected-theme');
+        if (savedTheme) {
+          root.setAttribute('data-theme', savedTheme);
+          themeOptions.forEach(option => {
+            option.classList.toggle('active', option.dataset.theme === savedTheme);
+          });
+        }
+
+        // 主题切换事件监听
+        themeOptions.forEach(option => {
+          option.addEventListener('click', function() {
+            const theme = this.dataset.theme;
+            
+            // 更新激活状态
+            themeOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 应用主题
+            root.setAttribute('data-theme', theme);
+            
+            // 保存到本地存储
+            localStorage.setItem('selected-theme', theme);
+
+            // 添加切换动画
+            document.body.style.transition = 'background-color 0.3s ease';
+            document.querySelectorAll('*').forEach(element => {
+              element.style.transition = 'all 0.3s ease';
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
